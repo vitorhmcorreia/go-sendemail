@@ -23,6 +23,7 @@ import (
 	"net/textproto"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"time"
 )
@@ -67,7 +68,7 @@ func run(args []string) error {
 		return err
 	}
 	if *showVersion {
-		fmt.Println(version)
+		fmt.Println(buildVersion())
 		return nil
 	}
 	if *logFile != "" {
@@ -309,6 +310,17 @@ func send(addr, host string, tryTLS bool, from string, rcpts []string, data []by
 		return err
 	}
 	return c.Quit()
+}
+
+// buildVersion is the -ldflags version (build.sh), else the module version Go records for `go install ...@vX`.
+func buildVersion() string {
+	if version != "dev" {
+		return version
+	}
+	if bi, ok := debug.ReadBuildInfo(); ok && bi.Main.Version != "" && bi.Main.Version != "(devel)" {
+		return bi.Main.Version
+	}
+	return version
 }
 
 func localName() string {
